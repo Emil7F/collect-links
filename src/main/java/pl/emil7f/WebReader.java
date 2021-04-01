@@ -7,33 +7,49 @@ import java.util.Set;
 
 public class WebReader {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
+        String link = "https://www.otodom.pl/sprzedaz/mieszkanie/gliwice/";
+        String fileName = "links.txt";
+        String linkPrefix = "https://www.otodom.pl/pl/oferta/";
 
-        URL url = new URL("https://www.otodom.pl/sprzedaz/mieszkanie/gliwice/");
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(url.openStream()));
+        createFileWithLinksFromURLAddress(link, linkPrefix,fileName);
+
+    }
+
+
+    private static Set<String> createFileWithLinksFromURLAddress(String urlAdress, String linkPrefix, String fileName) {
+
         String inputLine;
         StringBuilder builder = new StringBuilder();
-        while ((inputLine = in.readLine()) != null) {
-            builder.append(inputLine);
-            builder.append(System.lineSeparator());
+
+        try {
+            URL url = new URL(urlAdress);
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(url.openStream()));
+            while ((inputLine = in.readLine()) != null) {
+                builder.append(inputLine);
+                builder.append(System.lineSeparator());
+            }
+            in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        in.close();
 
         Set<String> links = new HashSet<>();
         String content = builder.toString();
 
 
         for (int i = 0; i < content.length(); i++) {
-            i = content.indexOf("https://www.otodom.pl/pl/oferta/", i);
+            i = content.indexOf(linkPrefix, i);
             if (i < 0) {
                 break;
             }
             String[] split = content.substring(i).split(".html");
             String link = split[0];
             boolean added = links.add(link);
+
             try (BufferedWriter bufferedWriter = new BufferedWriter(
-                    new FileWriter("links.txt", true))) {
+                    new FileWriter(fileName, true))) {
                 if (added) {
                     bufferedWriter.write(link + "\n");
                 }
@@ -42,9 +58,7 @@ public class WebReader {
             }
 
         }
-
-        links.forEach(string -> System.out.println(string));
-
+        return links;
 
     }
 }
